@@ -15,6 +15,8 @@ env:
 jobs:
   build:
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -71,3 +73,11 @@ jobs:
         with:
           name: YourMoney-unsigned-ipa
           path: YourMoney-unsigned.ipa
+
+      - name: Publish to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp YourMoney-unsigned.ipa YourMoney.ipa
+          gh release view ios-latest >/dev/null 2>&1 || gh release create ios-latest --title "iPhone 最新测试版（未签名）" --notes "每次打包后自动更新。直接下载 YourMoney.ipa。" --prerelease
+          gh release upload ios-latest YourMoney.ipa --clobber

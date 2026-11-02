@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -75,3 +77,11 @@ jobs:
         with:
           name: YourMoney-android-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk YourMoney.apk
+          gh release view android-latest >/dev/null 2>&1 || gh release create android-latest --title "Android 最新测试版" --notes "每次打包后自动更新。直接下载 YourMoney.apk。" --prerelease
+          gh release upload android-latest YourMoney.apk --clobber

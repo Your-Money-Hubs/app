@@ -9,8 +9,9 @@ on:
 
 env:
   YM_SCHEME: yourmoney
-  GOOGLE_IOS_CLIENT_ID: 457580824661-22p6qc4t1d1rq98l083tr3il33k6hjft.apps.googleusercontent.com
-  GOOGLE_REVERSED_ID: com.googleusercontent.apps.457580824661-22p6qc4t1d1rq98l083tr3il33k6hjft
+  GOOGLE_IOS_CLIENT_ID: 833062966924-0jsefheojih49ocs71kt9uqgbbi0nb39.apps.googleusercontent.com
+  GOOGLE_REVERSED_ID: com.googleusercontent.apps.833062966924-0jsefheojih49ocs71kt9uqgbbi0nb39
+  GOOGLE_REVERSED_ID_OLD: com.googleusercontent.apps.457580824661-22p6qc4t1d1rq98l083tr3il33k6hjft
 
 jobs:
   build:
@@ -40,7 +41,9 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1 dict" $PLIST
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes array" $PLIST
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes:0 string $GOOGLE_REVERSED_ID" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes:1 string $GOOGLE_REVERSED_ID_OLD" $PLIST
           /usr/libexec/PlistBuddy -c "Add :GIDClientID string $GOOGLE_IOS_CLIENT_ID" $PLIST || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" $PLIST || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string ${{ github.run_number }}" $PLIST
           python3 - <<'PY'
           p = 'ios/App/App/AppDelegate.swift'
           s = open(p).read()

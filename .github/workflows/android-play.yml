@@ -103,7 +103,9 @@ jobs:
           RUN_NO: ${{ github.run_number }}
         run: |
           test -n "$KS_B64" || { echo "缺少 ANDROID_KEYSTORE_BASE64 密钥，请先在仓库 Settings > Secrets 添加"; exit 1; }
-          echo "$KS_B64" | base64 -d > android/upload.keystore
+          CLEAN=$(printf '%s' "$KS_B64" | tr -d ' \n\r\t"')
+          echo "密钥文字长度: ${#CLEAN}（应为 3560 左右）"
+          printf '%s' "$CLEAN" | base64 -d > android/upload.keystore || { echo "ANDROID_KEYSTORE_BASE64 内容不完整或复制错了，请重新完整复制 keystore_base64.txt 里的全部文字"; exit 1; }
           cd android
           python3 - <<'PY'
           import os,re

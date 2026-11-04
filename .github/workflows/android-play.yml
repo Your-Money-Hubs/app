@@ -1,0 +1,136 @@
+name: Build Android (Play AAB)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install Capacitor
+        run: |
+          npm install
+          npm install @capacitor/android@^7.0.0 @capacitor/filesystem@^7.0.0 send-intent@^7.0.0
+
+      - name: Create Android project
+        run: |
+          npx cap add android
+          python3 - <<'PY'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p).read()
+          act = '''
+                  <activity
+                      android:name="de.mindlib.sendIntent.SendIntentActivity"
+                      android:label="@string/app_name"
+                      android:exported="true"
+                      android:theme="@style/AppTheme.NoActionBar">
+                      <intent-filter>
+                          <action android:name="android.intent.action.SEND" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                          <data android:mimeType="image/*" />
+                      </intent-filter>
+                  </activity>
+          '''
+          if 'SendIntentActivity' not in s:
+              assert s.count('</application>') == 1
+              s = s.replace('</application>', act + '    </application>')
+          svc = '''
+                  <service
+                      android:name=".PayNotifService"
+                      android:label="YourMoney"
+                      android:exported="true"
+                      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+                      <intent-filter>
+                          <action android:name="android.service.notification.NotificationListenerService" />
+                      </intent-filter>
+                  </service>
+          '''
+          if 'PayNotifService' not in s:
+              s = s.replace('</application>', svc + '    </application>')
+          open(p, 'w').write(s)
+          print(s)
+          PY
+          JAVA_DIR=android/app/src/main/java/com/yourmoneyhubs/app
+          cp native/android/PayNotifService.java native/android/PayNotifPlugin.java $JAVA_DIR/
+          cat > $JAVA_DIR/MainActivity.java <<'JAVA'
+          package com.yourmoneyhubs.app;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(PayNotifPlugin.class);
+                  super.onCreate(savedInstanceState);
+              }
+          }
+          JAVA
+          sed -i 's/^          //' $JAVA_DIR/MainActivity.java
+          cat $JAVA_DIR/MainActivity.java
+          npx cap sync android
+          printf "\next.androidxBrowserVersion = '1.8.0'\n" >> android/variables.gradle
+          cat >> android/build.gradle <<'GRADLE'
+
+          allprojects {
+              configurations.all {
+                  resolutionStrategy {
+                      force 'androidx.browser:browser:1.8.0'
+                  }
+              }
+          }
+          GRADLE
+
+      - name: Sign and build release AAB
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          RUN_NO: ${{ github.run_number }}
+        run: |
+          test -n "$KS_B64" || { echo "缺少 ANDROID_KEYSTORE_BASE64 密钥，请先在仓库 Settings > Secrets 添加"; exit 1; }
+          echo "$KS_B64" | base64 -d > android/upload.keystore
+          cd android
+          python3 - <<'PY'
+          import os,re
+          p='app/build.gradle'
+          s=open(p).read()
+          s=re.sub(r'versionCode\s+\d+','versionCode '+os.environ['RUN_NO'],s)
+          s=re.sub(r'versionName\s+"[^"]*"','versionName "1.0.'+os.environ['RUN_NO']+'"',s)
+          sign="""
+              signingConfigs {
+                  release {
+                      storeFile file('../upload.keystore')
+                      storePassword System.getenv('KS_PASS')
+                      keyAlias System.getenv('KEY_ALIAS')
+                      keyPassword System.getenv('KEY_PASS')
+                  }
+              }
+          """
+          s=s.replace('buildTypes {',sign+'    buildTypes {',1)
+          s=s.replace('release {\n            minifyEnabled','release {\n            signingConfig signingConfigs.release\n            minifyEnabled',1)
+          open(p,'w').write(s)
+          print(s)
+          PY
+          chmod +x gradlew
+          ./gradlew bundleRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YourMoney-play-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 14

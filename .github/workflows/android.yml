@@ -51,9 +51,40 @@ jobs:
           if 'SendIntentActivity' not in s:
               assert s.count('</application>') == 1
               s = s.replace('</application>', act + '    </application>')
+          svc = '''
+                  <service
+                      android:name=".PayNotifService"
+                      android:label="YourMoney"
+                      android:exported="true"
+                      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+                      <intent-filter>
+                          <action android:name="android.service.notification.NotificationListenerService" />
+                      </intent-filter>
+                  </service>
+          '''
+          if 'PayNotifService' not in s:
+              s = s.replace('</application>', svc + '    </application>')
           open(p, 'w').write(s)
           print(s)
           PY
+          JAVA_DIR=android/app/src/main/java/com/yourmoneyhubs/app
+          cp native/android/PayNotifService.java native/android/PayNotifPlugin.java $JAVA_DIR/
+          cat > $JAVA_DIR/MainActivity.java <<'JAVA'
+          package com.yourmoneyhubs.app;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(PayNotifPlugin.class);
+                  super.onCreate(savedInstanceState);
+              }
+          }
+          JAVA
+          sed -i 's/^          //' $JAVA_DIR/MainActivity.java
+          cat $JAVA_DIR/MainActivity.java
           npx cap sync android
           printf "\next.androidxBrowserVersion = '1.8.0'\n" >> android/variables.gradle
           cat >> android/build.gradle <<'GRADLE'

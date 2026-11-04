@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths-ignore:
       - '.github/workflows/android.yml'
+      - 'native/android/**'
 
 env:
   YM_SCHEME: yourmoney

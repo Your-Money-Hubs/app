@@ -40,6 +40,10 @@ jobs:
           </resources>
           XML
           sed -i 's/^          //' android/app/src/main/res/values/ic_launcher_background.xml
+          for f in $(find android/app/src/main/res -iname 'splash*.png'); do cp native/splash/splash-light.png "$f"; done
+          mkdir -p android/app/src/main/res/drawable-night
+          cp native/splash/splash-dark.png android/app/src/main/res/drawable-night/splash.png
+          find android/app/src/main/res -iname 'splash*' | head -20
           python3 - <<'PY'
           p = 'android/app/src/main/AndroidManifest.xml'
           s = open(p).read()

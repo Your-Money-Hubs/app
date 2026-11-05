@@ -35,6 +35,14 @@ jobs:
           ICONSET=$(find ios/App/App/Assets.xcassets -name AppIcon.appiconset -type d | head -1)
           echo "iconset: $ICONSET"; ls "$ICONSET"
           cp native/icon/icon-1024.png "$ICONSET/AppIcon-512@2x.png"
+          SPL=$(find ios/App/App/Assets.xcassets -name Splash.imageset -type d | head -1)
+          echo "splash set: $SPL"; ls "$SPL"
+          rm -f "$SPL"/*.png
+          cp native/splash/splash-light.png "$SPL/splash-light.png"
+          cp native/splash/splash-dark.png "$SPL/splash-dark.png"
+          cat > "$SPL/Contents.json" <<'JSON'
+          {"images":[{"idiom":"universal","filename":"splash-light.png","scale":"1x"},{"idiom":"universal","filename":"splash-light.png","scale":"2x"},{"idiom":"universal","filename":"splash-light.png","scale":"3x"},{"appearances":[{"appearance":"luminosity","value":"dark"}],"idiom":"universal","filename":"splash-dark.png","scale":"1x"},{"appearances":[{"appearance":"luminosity","value":"dark"}],"idiom":"universal","filename":"splash-dark.png","scale":"2x"},{"appearances":[{"appearance":"luminosity","value":"dark"}],"idiom":"universal","filename":"splash-dark.png","scale":"3x"}],"info":{"version":1,"author":"xcode"}}
+          JSON
           PLIST=ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" $PLIST || true
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" $PLIST

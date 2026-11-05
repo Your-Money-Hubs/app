@@ -32,6 +32,14 @@ jobs:
       - name: Create Android project
         run: |
           npx cap add android
+          cp -r native/icon/android/. android/app/src/main/res/
+          cat > android/app/src/main/res/values/ic_launcher_background.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="ic_launcher_background">#FAFAF8</color>
+          </resources>
+          XML
+          sed -i 's/^          //' android/app/src/main/res/values/ic_launcher_background.xml
           python3 - <<'PY'
           p = 'android/app/src/main/AndroidManifest.xml'
           s = open(p).read()

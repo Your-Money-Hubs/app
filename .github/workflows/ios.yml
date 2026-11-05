@@ -32,6 +32,9 @@ jobs:
       - name: Create iOS project
         run: |
           npx cap add ios
+          ICONSET=$(find ios/App/App/Assets.xcassets -name AppIcon.appiconset -type d | head -1)
+          echo "iconset: $ICONSET"; ls "$ICONSET"
+          cp native/icon/icon-1024.png "$ICONSET/AppIcon-512@2x.png"
           PLIST=ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" $PLIST || true
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" $PLIST

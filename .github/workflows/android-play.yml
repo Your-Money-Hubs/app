@@ -58,6 +58,18 @@ jobs:
                       </intent-filter>
                   </service>
           '''
+          deeplink = '''
+                      <intent-filter>
+                          <action android:name="android.intent.action.VIEW" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                          <category android:name="android.intent.category.BROWSABLE" />
+                          <data android:scheme="yourmoney" />
+                      </intent-filter>
+          '''
+          if 'android:scheme="yourmoney"' not in s:
+              i = s.index('android:name=".MainActivity"')
+              j = s.index('</activity>', i)
+              s = s[:j] + deeplink + '        ' + s[j:]
           if 'PayNotifService' not in s:
               s = s.replace('</application>', svc + '    </application>')
           open(p, 'w').write(s)

@@ -9,6 +9,7 @@
     "@capacitor/app": "^7.0.0",
     "@capacitor/browser": "^7.0.0",
     "@capgo/capacitor-social-login": "^7.0.0",
-    "@capacitor/local-notifications": "^7.0.0"
+    "@capacitor/local-notifications": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0"
   }
 }

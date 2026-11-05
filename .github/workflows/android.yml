@@ -27,7 +27,7 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install
-          npm install @capacitor/android@^7.0.0 @capacitor/filesystem@^7.0.0 send-intent@^7.0.0
+          npm install @capacitor/android@^7.0.0 @capacitor/filesystem@^7.0.0 @capacitor/haptics@^7.0.0 send-intent@^7.0.0
 
       - name: Create Android project
         run: |

@@ -107,6 +107,9 @@ jobs:
           cat $JAVA_DIR/MainActivity.java
           npx cap sync android
           printf "\next.androidxBrowserVersion = '1.8.0'\n" >> android/variables.gradle
+          sed -i -E 's/(compileSdkVersion|targetSdkVersion) *= *[0-9]+/\1 = 36/' android/variables.gradle
+          echo 'android.suppressUnsupportedCompileSdk=36' >> android/gradle.properties
+          grep -n 'SdkVersion' android/variables.gradle
           cat >> android/build.gradle <<'GRADLE'
 
           allprojects {

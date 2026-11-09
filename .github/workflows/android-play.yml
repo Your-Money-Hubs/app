@@ -84,6 +84,10 @@ jobs:
               s = s[:j] + deeplink + '        ' + s[j:]
           if 'PayNotifService' not in s:
               s = s.replace('</application>', svc + '    </application>')
+          if 'xmlns:tools' not in s:
+              s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
+          if 'permission.AD_ID' not in s:
+              s = s.replace('<application', '<uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />\n    <application', 1)
           open(p, 'w').write(s)
           print(s)
           PY

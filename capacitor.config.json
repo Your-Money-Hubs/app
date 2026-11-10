@@ -4,7 +4,19 @@
   "webDir": "www",
   "server": {
     "url": "https://yourmoneyhubs.com",
-    "allowNavigation": ["yourmoneyhubs.com", "www.yourmoneyhubs.com"]
+    "allowNavigation": [
+      "yourmoneyhubs.com",
+      "www.yourmoneyhubs.com"
+    ]
   },
-  "ios": { "contentInset": "never" }
+  "ios": {
+    "contentInset": "never"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 5000,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 250
+    }
+  }
 }

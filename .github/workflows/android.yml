@@ -88,11 +88,27 @@ jobs:
               s = s[:j] + deeplink + '        ' + s[j:]
           if 'PayNotifService' not in s:
               s = s.replace('</application>', svc + '    </application>')
+          widget = '''
+                  <receiver
+                      android:name=".YMWidgetProvider"
+                      android:label="YourMoney"
+                      android:exported="false">
+                      <intent-filter>
+                          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                      </intent-filter>
+                      <meta-data
+                          android:name="android.appwidget.provider"
+                          android:resource="@xml/ym_widget_info" />
+                  </receiver>
+          '''
+          if 'YMWidgetProvider' not in s:
+              s = s.replace('</application>', widget + '    </application>')
           open(p, 'w').write(s)
           print(s)
           PY
           JAVA_DIR=android/app/src/main/java/com/yourmoneyhubs/app
-          cp native/android/PayNotifService.java native/android/PayNotifPlugin.java $JAVA_DIR/
+          cp native/android/PayNotifService.java native/android/PayNotifPlugin.java native/android/YMWidgetProvider.java native/android/YMWidgetPlugin.java $JAVA_DIR/
+          cp -r native/android/res/. android/app/src/main/res/
           cat > $JAVA_DIR/MainActivity.java <<'JAVA'
           package com.yourmoneyhubs.app;
 
@@ -103,6 +119,7 @@ jobs:
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   registerPlugin(PayNotifPlugin.class);
+                  registerPlugin(YMWidgetPlugin.class);
                   super.onCreate(savedInstanceState);
               }
           }

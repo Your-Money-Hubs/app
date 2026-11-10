@@ -84,21 +84,15 @@ jobs:
               s = s[:j] + deeplink + '        ' + s[j:]
           if 'PayNotifService' not in s:
               s = s.replace('</application>', svc + '    </application>')
-          widget = '''
-                  <receiver
-                      android:name=".YMWidgetProvider"
-                      android:label="YourMoney"
-                      android:exported="false">
-                      <intent-filter>
-                          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                      </intent-filter>
-                      <meta-data
-                          android:name="android.appwidget.provider"
-                          android:resource="@xml/ym_widget_info" />
-                  </receiver>
-          '''
-          if 'YMWidgetProvider' not in s:
-              s = s.replace('</application>', widget + '    </application>')
+          widgets = [('YMWidgetProvider', 'ym_widget_info', 1), ('YMWSmall', 'ym_w_info_small', 2), ('YMWBudget', 'ym_w_info_budget', 3), ('YMWRecent', 'ym_w_info_recent', 4), ('YMWWallets', 'ym_w_info_wallets', 5), ('YMWButtons', 'ym_w_info_buttons', 6), ('YMWDebts', 'ym_w_info_debts', 7), ('YMWWeek', 'ym_w_info_week', 8), ('YMWMonth', 'ym_w_info_month', 9)]
+          for cls, info, n in widgets:
+              if '".' + cls + '"' in s:
+                  continue
+              rcv = ('        <receiver android:name=".' + cls + '" android:label="@string/ym_w_name_' + str(n) + '" android:exported="false">\n'
+                     '            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>\n'
+                     '            <meta-data android:name="android.appwidget.provider" android:resource="@xml/' + info + '" />\n'
+                     '        </receiver>\n')
+              s = s.replace('</application>', rcv + '    </application>')
           if 'xmlns:tools' not in s:
               s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
           if 'permission.AD_ID' not in s:
@@ -107,7 +101,7 @@ jobs:
           print(s)
           PY
           JAVA_DIR=android/app/src/main/java/com/yourmoneyhubs/app
-          cp native/android/PayNotifService.java native/android/PayNotifPlugin.java native/android/YMWidgetProvider.java native/android/YMWidgetPlugin.java $JAVA_DIR/
+          cp native/android/*.java $JAVA_DIR/
           cp -r native/android/res/. android/app/src/main/res/
           cat > $JAVA_DIR/MainActivity.java <<'JAVA'
           package com.yourmoneyhubs.app;

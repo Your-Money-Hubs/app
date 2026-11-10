@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ym_w_bg">#2A2C30</color>
+    <color name="ym_w_text">#F2F2F2</color>
+    <color name="ym_w_sub">#A0A3A8</color>
+    <color name="ym_w_p_bg">#F2F2F2</color>
+    <color name="ym_w_p_text">#111111</color>
+    <color name="ym_w_s_bg">#3A3D42</color>
+    <color name="ym_w_red">#FF7B6E</color>
+    <color name="ym_w_green">#4CD38A</color>
+    <color name="ym_w_track">#3A3D42</color>
+    <color name="ym_w_bar">#45484E</color>
+    <color name="ym_w_gold">#F2A81D</color>
+    <color name="ym_w_line2">#5A5D63</color>
+    <color name="ym_w_div">#3A3D42</color>
+</resources>

@@ -9,11 +9,11 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 @CapacitorPlugin(name = "YMWidget")
 public class YMWidgetPlugin extends Plugin {
-    private static final String[] KEYS = {"today", "month", "left", "zero", "day", "ym", "lToday", "lMonth", "lLeft", "lAdd", "lScan"};
+    private static final String[] KEYS = {"today", "month", "left", "zero", "day", "ym", "lToday", "lMonth", "lLeft", "lAdd", "lScan", "data"};
 
     @PluginMethod
     public void update(PluginCall call) {
-        SharedPreferences.Editor e = getContext().getSharedPreferences(YMWidgetProvider.PREFS, Context.MODE_PRIVATE).edit();
+        SharedPreferences.Editor e = getContext().getSharedPreferences(YMW.PREFS, Context.MODE_PRIVATE).edit();
         for (String k : KEYS) {
             String s = call.getString(k);
             if (s != null) e.putString(k, s); else e.remove(k);
@@ -21,7 +21,7 @@ public class YMWidgetPlugin extends Plugin {
         Boolean hide = call.getBoolean("hide", false);
         e.putBoolean("hide", hide != null && hide);
         e.apply();
-        YMWidgetProvider.refresh(getContext());
+        YMW.refreshAll(getContext());
         call.resolve();
     }
 }

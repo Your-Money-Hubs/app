@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ym_w_name_1">Today + quick add</string>
+    <string name="ym_w_name_2">Today (small)</string>
+    <string name="ym_w_name_3">Budget</string>
+    <string name="ym_w_name_4">Recent</string>
+    <string name="ym_w_name_5">Wallets</string>
+    <string name="ym_w_name_6">Quick buttons</string>
+    <string name="ym_w_name_7">IOUs</string>
+    <string name="ym_w_name_8">Last 7 days</string>
+    <string name="ym_w_name_9">This month trend</string>
+</resources>

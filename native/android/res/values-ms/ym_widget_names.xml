@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ym_w_name_1">Hari ini</string>
+    <string name="ym_w_name_2">Hari ini (kecil)</string>
+    <string name="ym_w_name_3">Bajet</string>
+    <string name="ym_w_name_4">Terkini</string>
+    <string name="ym_w_name_5">Dompet</string>
+    <string name="ym_w_name_6">Butang pantas</string>
+    <string name="ym_w_name_7">Hutang</string>
+    <string name="ym_w_name_8">7 hari</string>
+    <string name="ym_w_name_9">Trend bulan ini</string>
+</resources>

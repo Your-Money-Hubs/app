@@ -33,6 +33,18 @@ public final class YMW {
 
     private YMW() {}
 
+    /** ask the launcher to put widget #which (1..9) on the home screen */
+    static boolean pin(Context c, int which) {
+        if (which < 1 || which > PROVIDERS.length || android.os.Build.VERSION.SDK_INT < 26) return false;
+        AppWidgetManager m = AppWidgetManager.getInstance(c);
+        if (!m.isRequestPinAppWidgetSupported()) return false;
+        return m.requestPinAppWidget(new ComponentName(c, PROVIDERS[which - 1]), null, null);
+    }
+
+    static boolean canPin(Context c) {
+        return android.os.Build.VERSION.SDK_INT >= 26 && AppWidgetManager.getInstance(c).isRequestPinAppWidgetSupported();
+    }
+
     static void refreshAll(Context c) {
         AppWidgetManager m = AppWidgetManager.getInstance(c);
         for (int i = 0; i < PROVIDERS.length; i++) {
@@ -61,6 +73,20 @@ public final class YMW {
         JSONObject l = d.optJSONObject("L");
         String v = l == null ? null : l.optString(k, null);
         return v == null || v.isEmpty() ? def : v;
+    }
+
+    static boolean dinoOn(JSONObject d) { return d.optBoolean("dino", true); }
+
+    static void dinoVis(RemoteViews v, JSONObject d, int id) { v.setViewVisibility(id, dinoOn(d) ? View.VISIBLE : View.GONE); }
+
+    static String btnUrl(String k) {
+        switch (k) {
+            case "receipt": return "yourmoney://receipt";
+            case "debts": return "yourmoney://debts";
+            case "budget": return "yourmoney://budget";
+            case "home": return "yourmoney://home";
+            default: return "yourmoney://quick";
+        }
     }
 
     static PendingIntent link(Context c, String url, int req) {
@@ -97,6 +123,7 @@ public final class YMW {
         switch (which) {
             case 2: {
                 v = new RemoteViews(c.getPackageName(), R.layout.ym_w_small);
+                dinoVis(v, d, R.id.w_dino);
                 v.setTextViewText(R.id.w_label, L(d, "lToday", "今天支出"));
                 v.setTextViewText(R.id.w_today, !has ? dash : newDay(d) ? zero : d.optString("today"));
                 v.setTextViewText(R.id.w_month, L(d, "lMonth", "本月") + " " + (!has ? dash : newMonth(d) ? zero : d.optString("monthShort")));
@@ -117,12 +144,13 @@ public final class YMW {
                 v.setTextColor(R.id.w_remain, c.getColor(left.startsWith("RM -") ? R.color.ym_w_red : R.color.ym_w_green));
                 int[] s = sizePx(c, m, id, 150, 160);
                 float dens = s[2] / 1000f;
-                v.setImageViewBitmap(R.id.w_chart, progress(c, (int) (s[0] - 28 * dens), (int) (52 * dens), pct < 0 ? 0 : pct, dens));
+                v.setImageViewBitmap(R.id.w_chart, progress(c, (int) (s[0] - 28 * dens), (int) (52 * dens), pct < 0 ? 0 : pct, dens, dinoOn(d)));
                 v.setOnClickPendingIntent(R.id.w_root, link(c, "yourmoney://budget", 30));
                 return v;
             }
             case 4: {
                 v = new RemoteViews(c.getPackageName(), R.layout.ym_w_recent);
+                dinoVis(v, d, R.id.w_dino);
                 v.setTextViewText(R.id.w_label, L(d, "lRecent", "最近记账"));
                 JSONArray r = d.optJSONArray("recent");
                 int n = r == null ? 0 : Math.min(3, r.length());
@@ -148,6 +176,7 @@ public final class YMW {
             }
             case 5: {
                 v = new RemoteViews(c.getPackageName(), R.layout.ym_w_wallets);
+                dinoVis(v, d, R.id.w_coin);
                 v.setTextViewText(R.id.w_label, L(d, "lWallets", "钱包余额"));
                 JSONArray w = d.optJSONArray("wallets");
                 int n = w == null ? 0 : Math.min(4, w.length());
@@ -170,17 +199,23 @@ public final class YMW {
             }
             case 6: {
                 v = new RemoteViews(c.getPackageName(), R.layout.ym_w_buttons);
-                v.setTextViewText(R.id.w_add, L(d, "lAdd", "＋ 记一笔"));
-                v.setTextViewText(R.id.w_scan, L(d, "lScan", "扫收据"));
-                v.setTextViewText(R.id.w_aa, L(d, "lAA", "AA 分账"));
+                int[] bid = {R.id.w_add, R.id.w_scan, R.id.w_aa};
+                String[] defK = {"quick", "receipt", "debts"};
+                String[] defL = {L(d, "lAdd", "＋ 记一笔"), L(d, "lScan", "扫收据"), L(d, "lAA", "AA 分账")};
+                JSONArray bs = d.optJSONArray("btns");
+                for (int i = 0; i < 3; i++) {
+                    JSONObject b = bs == null ? null : bs.optJSONObject(i);
+                    String k = b == null ? defK[i] : b.optString("k", defK[i]);
+                    String lb = b == null ? defL[i] : b.optString("l", defL[i]);
+                    v.setTextViewText(bid[i], lb);
+                    v.setOnClickPendingIntent(bid[i], link(c, btnUrl(k), 61 + i));
+                }
                 v.setOnClickPendingIntent(R.id.w_root, link(c, "yourmoney://home", 60));
-                v.setOnClickPendingIntent(R.id.w_add, link(c, "yourmoney://quick", 61));
-                v.setOnClickPendingIntent(R.id.w_scan, link(c, "yourmoney://receipt", 62));
-                v.setOnClickPendingIntent(R.id.w_aa, link(c, "yourmoney://debts", 63));
                 return v;
             }
             case 7: {
                 v = new RemoteViews(c.getPackageName(), R.layout.ym_w_debts);
+                dinoVis(v, d, R.id.w_dino);
                 v.setTextViewText(R.id.w_l1, L(d, "lOwedMe", "朋友欠你"));
                 v.setTextViewText(R.id.w_l2, L(d, "lIOwe", "你欠别人"));
                 v.setTextViewText(R.id.w_v1, d.optString("owedMe", dash));
@@ -203,7 +238,7 @@ public final class YMW {
                 int[] s = sizePx(c, m, id, 250, 150);
                 float dens = s[2] / 1000f;
                 v.setImageViewBitmap(R.id.w_chart, bars(c, (int) (s[0] - 28 * dens), (int) Math.max(60 * dens, s[1] - 84 * dens),
-                    d.optJSONArray("week"), d.optJSONArray("labels"), dens));
+                    d.optJSONArray("week"), d.optJSONArray("labels"), dens, dinoOn(d)));
                 v.setOnClickPendingIntent(R.id.w_root, link(c, "yourmoney://home", 80));
                 return v;
             }
@@ -215,12 +250,13 @@ public final class YMW {
                 int[] s = sizePx(c, m, id, 150, 160);
                 float dens = s[2] / 1000f;
                 v.setImageViewBitmap(R.id.w_chart, line(c, (int) (s[0] - 28 * dens), (int) Math.max(50 * dens, s[1] - 96 * dens),
-                    d.optJSONArray("cur"), d.optJSONArray("last"), dens));
+                    d.optJSONArray("cur"), d.optJSONArray("last"), dens, dinoOn(d)));
                 v.setOnClickPendingIntent(R.id.w_root, link(c, "yourmoney://home", 90));
                 return v;
             }
             default: {
                 v = new RemoteViews(c.getPackageName(), R.layout.ym_widget);
+                dinoVis(v, d, R.id.w_dino);
                 boolean nm = newMonth(d);
                 String left = nm ? "" : d.optString("left", "");
                 v.setTextViewText(R.id.w_label, L(d, "lToday", "今天支出"));
@@ -254,7 +290,7 @@ public final class YMW {
     }
 
     /** budget bar with the dino walking towards the coin */
-    static Bitmap progress(Context c, int w, int h, int pct, float dens) {
+    static Bitmap progress(Context c, int w, int h, int pct, float dens, boolean showDino) {
         w = Math.max(w, 60); h = Math.max(h, 30);
         Bitmap b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         Canvas cv = new Canvas(b);
@@ -267,9 +303,9 @@ public final class YMW {
         float f = Math.max(0, Math.min(100, pct)) / 100f;
         p.setColor(c.getColor(pct > 100 ? R.color.ym_w_red : R.color.ym_w_gold));
         if (f > 0) cv.drawRoundRect(new RectF(0, y0, Math.max(barH, trackEnd * f), y1), r, r, p);
-        Bitmap cn = coin(c, coinS);
+        Bitmap cn = showDino ? coin(c, coinS) : null;
         if (cn != null) cv.drawBitmap(cn, w - coinS, y1 - coinS, null);
-        Bitmap dn = dino(c, (int) Math.min(h - barH - 6 * dens, 40 * dens), true);
+        Bitmap dn = showDino ? dino(c, (int) Math.min(h - barH - 6 * dens, 40 * dens), true) : null;
         if (dn != null) {
             float x = trackEnd * f - dn.getWidth() / 2f;
             x = Math.max(0, Math.min(x, w - coinS - dn.getWidth()));
@@ -279,7 +315,7 @@ public final class YMW {
     }
 
     /** last 7 days bars, today in coin gold with the dino on top */
-    static Bitmap bars(Context c, int w, int h, JSONArray vals, JSONArray labels, float dens) {
+    static Bitmap bars(Context c, int w, int h, JSONArray vals, JSONArray labels, float dens, boolean showDino) {
         w = Math.max(w, 100); h = Math.max(h, 60);
         Bitmap b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         Canvas cv = new Canvas(b);
@@ -288,7 +324,7 @@ public final class YMW {
         double max = 0.01;
         double[] v = new double[n];
         for (int i = 0; i < n; i++) { v[i] = vals == null ? 0 : vals.optDouble(i, 0); max = Math.max(max, v[i]); }
-        float labelH = 16 * dens, dinoH = Math.min(36 * dens, h * 0.35f), gap = 8 * dens;
+        float labelH = 16 * dens, dinoH = showDino ? Math.min(36 * dens, h * 0.35f) : 0, gap = 8 * dens;
         float bw = (w - gap * (n - 1)) / n, base = h - labelH, top = dinoH + 2 * dens, r = 6 * dens;
         Paint tp = new Paint(Paint.ANTI_ALIAS_FLAG);
         tp.setColor(c.getColor(R.color.ym_w_sub));
@@ -302,7 +338,7 @@ public final class YMW {
             cv.drawRect(new RectF(x, base - Math.min(bh, r), x + bw, base), p);
             String lb = labels == null ? "" : labels.optString(i, "");
             cv.drawText(lb, x + bw / 2, h - 3 * dens, tp);
-            if (i == n - 1) {
+            if (i == n - 1 && showDino) {
                 Bitmap dn = dino(c, (int) dinoH, true);
                 if (dn != null) cv.drawBitmap(dn, x + bw / 2 - dn.getWidth() / 2f, base - bh - dn.getHeight(), null);
             }
@@ -311,7 +347,7 @@ public final class YMW {
     }
 
     /** cumulative spending this month (solid) vs last month (dashed); dino at the end of this month's line */
-    static Bitmap line(Context c, int w, int h, JSONArray cur, JSONArray last, float dens) {
+    static Bitmap line(Context c, int w, int h, JSONArray cur, JSONArray last, float dens, boolean showDino) {
         w = Math.max(w, 80); h = Math.max(h, 50);
         Bitmap b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         Canvas cv = new Canvas(b);
@@ -321,7 +357,7 @@ public final class YMW {
         for (int i = 0; i < nc; i++) max = Math.max(max, cur.optDouble(i, 0));
         for (int i = 0; i < nl; i++) max = Math.max(max, last.optDouble(i, 0));
         max *= 1.08;
-        float dinoH = Math.min(30 * dens, h * 0.4f), padTop = dinoH, padR = 8 * dens, padB = 4 * dens;
+        float dinoH = showDino ? Math.min(30 * dens, h * 0.4f) : 0, padTop = Math.max(dinoH, 6 * dens), padR = 8 * dens, padB = 4 * dens;
         float cw = w - padR, ch = h - padTop - padB;
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setStyle(Paint.Style.STROKE);
@@ -354,7 +390,7 @@ public final class YMW {
             dot.setColor(c.getColor(R.color.ym_w_text));
             cv.drawCircle(ex, ey, 4 * dens, dot);
         }
-        Bitmap dn = dino(c, (int) dinoH, true);
+        Bitmap dn = showDino ? dino(c, (int) dinoH, true) : null;
         if (dn != null) {
             float x = Math.max(0, Math.min(ex - dn.getWidth() / 2f, w - dn.getWidth()));
             cv.drawBitmap(dn, x, Math.max(0, ey - dn.getHeight() - 3 * dens), null);

@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      HAS_PLAY_KEY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
     permissions:
       contents: write
     steps:
@@ -181,9 +183,7 @@ jobs:
 
       # 自动上传到 Play 封闭测试（Alpha）。没设置 PLAY_SERVICE_ACCOUNT_JSON 就跳过，照旧下载 aab 手动上传。
       - name: Upload to Google Play (closed testing)
-        env:
-          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-        if: ${{ env.PLAY_JSON != '' }}
+        if: env.HAS_PLAY_KEY == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}

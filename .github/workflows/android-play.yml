@@ -178,3 +178,17 @@ jobs:
           name: YourMoney-play-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 14
+
+      # 自动上传到 Play 封闭测试（Alpha）。没设置 PLAY_SERVICE_ACCOUNT_JSON 就跳过，照旧下载 aab 手动上传。
+      - name: Upload to Google Play (closed testing)
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        if: ${{ env.PLAY_JSON != '' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.yourmoneyhubs.app
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: alpha
+          status: completed
+          releaseName: ${{ github.run_number }}

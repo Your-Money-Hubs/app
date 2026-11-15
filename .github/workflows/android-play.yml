@@ -97,6 +97,9 @@ jobs:
               s = s.replace('</application>', rcv + '    </application>')
           if 'xmlns:tools' not in s:
               s = s.replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
+          # AdMob（设置 → 支持我们：看奖励广告）
+          if 'gms.ads.APPLICATION_ID' not in s:
+              s = s.replace('</application>', '    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-4018084613463777~9593843936" />\n    </application>', 1)
           if 'permission.AD_ID' not in s:
               s = s.replace('<application', '<uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />\n    <application', 1)
           open(p, 'w').write(s)

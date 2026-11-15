@@ -97,6 +97,9 @@ jobs:
                      '            <meta-data android:name="android.appwidget.provider" android:resource="@xml/' + info + '" />\n'
                      '        </receiver>\n')
               s = s.replace('</application>', rcv + '    </application>')
+          # AdMob（设置 → 支持我们：看奖励广告）
+          if 'gms.ads.APPLICATION_ID' not in s:
+              s = s.replace('</application>', '    <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-4018084613463777~9593843936" />\n    </application>', 1)
           open(p, 'w').write(s)
           print(s)
           PY

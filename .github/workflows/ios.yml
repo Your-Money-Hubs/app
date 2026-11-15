@@ -27,7 +27,10 @@ jobs:
           node-version: 20
 
       - name: Install Capacitor
-        run: npm install
+        run: |
+          npm install
+          # 广告（AdMob）目前只给 Android；iPhone 版不装，免得缺少 iOS App ID 打开就闪退
+          npm uninstall @capacitor-community/admob
 
       - name: Create iOS project
         run: |
